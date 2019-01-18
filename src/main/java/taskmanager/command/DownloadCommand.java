@@ -1,14 +1,17 @@
 package taskmanager.command;
 
+import taskmanager.events.Events;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.function.Supplier;
 
-import static taskmanager.command.ExecutionReport.*;
-import static taskmanager.command.ExecutionReport.DOWNLOAD_FAILED;
+import static taskmanager.events.Events.DOWNLOAD_FAILED;
+import static taskmanager.events.Events.FILE_DOWNLOADED;
 
 public class DownloadCommand extends AbstractCommand {
 
@@ -17,14 +20,23 @@ public class DownloadCommand extends AbstractCommand {
     }
 
     @Override
-    public ExecutionReport call() throws Exception {
-        Thread.sleep(10000);
-        URL website = new URL(command[1]);
-        try (InputStream in = website.openStream()) {
-            Files.copy(in, Paths.get(command[2]), StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException e) {
-            return DOWNLOAD_FAILED;
+    public Events call() throws Exception {
+        return executeInGroup(() -> {
+            try (InputStream in = new URL(command[1]).openStream()) {
+                Files.copy(in, Paths.get(command[2]), StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+                return DOWNLOAD_FAILED;
+            }
+            return FILE_DOWNLOADED;
+        });
+    }
+
+    private Events executeInGroup(Supplier<Events> callable) {
+        synchronized (eventQueue) {
+            Events res = callable.get();
+            eventQueue.offer(res);
+            eventQueue.notifyAll();
+            return res;
         }
-        return FILE_DOWNLOADED;
     }
 }

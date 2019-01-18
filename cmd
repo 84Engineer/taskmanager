@@ -1,0 +1,1 @@
+d https://www.gutenberg.org/files/58705/58705-0.txt book3.txt > cw book3.txt group-command.txt > del book3.txt
