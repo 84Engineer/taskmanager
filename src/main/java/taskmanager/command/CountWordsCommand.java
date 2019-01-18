@@ -1,7 +1,5 @@
 package taskmanager.command;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -10,18 +8,28 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static taskmanager.command.ExecutionReport.WORDS_COUNTED;
+import static taskmanager.command.ExecutionReport.WORDS_COUNT_FAILED;
+
 public class CountWordsCommand extends AbstractCommand {
 
     CountWordsCommand(String[] command) {
         super(command);
     }
 
-    public void execute() throws Exception {
-        String inputFile = command[1];
-        String outputFile = command[2];
-        List<String> allWords = getAllWords(inputFile);
-        saveWords(allWords, outputFile);
+    @Override
+    public ExecutionReport call() {
+        try {
+            String inputFile = command[1];
+            String outputFile = command[2];
+            List<String> allWords = getAllWords(inputFile);
+            saveWords(allWords, outputFile);
+        } catch (IOException e) {
+            return WORDS_COUNT_FAILED;
+        }
+        return WORDS_COUNTED;
     }
+
 
     private List<String> getAllWords(String inputFile) throws IOException {
         return Files.lines(Paths.get(inputFile), Charset.forName("UTF-8")).map(l -> l.split("\\W+"))

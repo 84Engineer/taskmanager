@@ -1,6 +1,8 @@
 package taskmanager.command;
 
-public abstract class AbstractCommand implements Command {
+import java.util.concurrent.Callable;
+
+public abstract class AbstractCommand implements Callable<ExecutionReport> {
 
     String name;
     String[] command;
