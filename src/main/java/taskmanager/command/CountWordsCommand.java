@@ -21,7 +21,8 @@ public class CountWordsCommand extends AbstractCommand {
 
     @Override
     public Events call() {
-        return executeInGroup(() -> {
+
+        Supplier<Events> result = () -> {
             try {
                 String inputFile = command[1];
                 String outputFile = command[2];
@@ -31,7 +32,12 @@ public class CountWordsCommand extends AbstractCommand {
                 return WORDS_COUNT_FAILED;
             }
             return WORDS_COUNTED;
-        });
+        };
+
+        return eventQueue == null
+                ? result.get()
+                : executeInGroup(result);
+
     }
 
     private Events executeInGroup(Supplier<Events> callable) {

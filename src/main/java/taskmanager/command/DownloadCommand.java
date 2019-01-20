@@ -21,14 +21,20 @@ public class DownloadCommand extends AbstractCommand {
 
     @Override
     public Events call() {
-        return executeInGroup(() -> {
+
+        Supplier<Events> res = () -> {
             try (InputStream in = new URL(command[1]).openStream()) {
                 Files.copy(in, Paths.get(command[2]), StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException e) {
                 return DOWNLOAD_FAILED;
             }
             return FILE_DOWNLOADED;
-        });
+        };
+
+
+        return eventQueue == null
+                ? res.get()
+                : executeInGroup(res);
     }
 
     private Events executeInGroup(Supplier<Events> callable) {

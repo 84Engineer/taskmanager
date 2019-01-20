@@ -17,14 +17,19 @@ public class DeleteCommand extends AbstractCommand {
 
     @Override
     public Events call() {
-        return executeInGroup(() -> {
+
+        Supplier<Events> res = () -> {
             try {
                 Files.delete(Paths.get(command[1]));
                 return FILE_DELETED;
             } catch (IOException e) {
                 return FILE_DELETION_FAILED;
             }
-        });
+        };
+
+        return eventQueue == null
+                ? res.get()
+                : executeInGroup(res);
     }
 
     private Events executeInGroup(Supplier<Events> callable) {
