@@ -9,6 +9,7 @@ public abstract class AbstractCommand implements Callable<Events> {
 
     String name;
     String[] command;
+    Object lock;
 
     Queue<Events> eventQueue;
 
@@ -23,6 +24,10 @@ public abstract class AbstractCommand implements Callable<Events> {
 
     public void setEventQueue(Queue<Events> eventQueue) {
         this.eventQueue = eventQueue;
+    }
+
+    public void setLock(Object lock) {
+        this.lock = lock;
     }
 
 }

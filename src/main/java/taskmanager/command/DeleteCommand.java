@@ -7,8 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.function.Supplier;
 
-import static taskmanager.events.Events.FILE_DELETED;
-import static taskmanager.events.Events.FILE_DELETION_FAILED;
+import static taskmanager.events.Events.*;
 
 public class DeleteCommand extends AbstractCommand {
 
@@ -17,7 +16,7 @@ public class DeleteCommand extends AbstractCommand {
     }
 
     @Override
-    public Events call() throws Exception {
+    public Events call() {
         return executeInGroup(() -> {
             try {
                 Files.delete(Paths.get(command[1]));
@@ -30,28 +29,34 @@ public class DeleteCommand extends AbstractCommand {
 
     private Events executeInGroup(Supplier<Events> callable) {
         while (true) {
-            synchronized (eventQueue) {
+            synchronized (lock) {
                 try {
-                    if (eventQueue.peek() == Events.WORDS_COUNTED) {
+                    if (eventQueue.peek() == WORDS_COUNTED) {
+                        //proceed
                         eventQueue.poll();
-                        Events res = callable.get();
-                        eventQueue.offer(res);
-                        eventQueue.notifyAll();
-                        return res;
-                    } else if (eventQueue.peek() == Events.WORDS_COUNT_FAILED) {
+                        break;
+                    } else if (eventQueue.peek() == WORDS_COUNT_FAILED) {
                         eventQueue.poll();
-                        Events res = FILE_DELETION_FAILED;
-                        eventQueue.offer(res);
-                        eventQueue.notifyAll();
-                        return res;
+                        eventQueue.add(FILE_DELETION_FAILED);
+                        lock.notifyAll();
+                        return FILE_DELETION_FAILED;
                     } else {
-                        eventQueue.wait();
+                        lock.wait();
                     }
                 } catch (InterruptedException e) {
-                    //TODO check?
+                    //TODO -- ?
                 }
             }
         }
+
+        Events result = callable.get();
+
+        synchronized (lock) {
+            eventQueue.add(result);
+            lock.notifyAll();
+        }
+
+        return result;
     }
 
 }

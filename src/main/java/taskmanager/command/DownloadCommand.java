@@ -20,7 +20,7 @@ public class DownloadCommand extends AbstractCommand {
     }
 
     @Override
-    public Events call() throws Exception {
+    public Events call() {
         return executeInGroup(() -> {
             try (InputStream in = new URL(command[1]).openStream()) {
                 Files.copy(in, Paths.get(command[2]), StandardCopyOption.REPLACE_EXISTING);
@@ -32,11 +32,12 @@ public class DownloadCommand extends AbstractCommand {
     }
 
     private Events executeInGroup(Supplier<Events> callable) {
-        synchronized (eventQueue) {
-            Events res = callable.get();
+        Events res = callable.get();
+
+        synchronized (lock) {
             eventQueue.offer(res);
-            eventQueue.notifyAll();
-            return res;
+            lock.notifyAll();
         }
+        return res;
     }
 }

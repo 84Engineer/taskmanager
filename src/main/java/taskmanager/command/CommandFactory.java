@@ -3,9 +3,9 @@ package taskmanager.command;
 import taskmanager.events.Events;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-import java.util.concurrent.LinkedBlockingDeque;
 
 public class CommandFactory {
 
@@ -15,10 +15,12 @@ public class CommandFactory {
         List<AbstractCommand> result = new ArrayList<>();
         for (String commandLine : lines) {
             if (isGroup(commandLine)) {
-                Queue<Events> queue = new LinkedBlockingDeque<>();
+                Queue<Events> queue = new LinkedList<>();
+                Object lock = new Object();
                 for (String cmd : commandLine.split(COMMAND_SEPARATOR)) {
                     AbstractCommand command = getCommand(cmd.trim());
                     command.setEventQueue(queue);
+                    command.setLock(lock);
                     result.add(command);
                 }
             } else {
