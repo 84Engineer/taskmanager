@@ -2,32 +2,27 @@ package taskmanager.command;
 
 import taskmanager.events.Events;
 
-import java.util.Queue;
 import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
 
-public abstract class AbstractCommand implements Callable<Events> {
+public abstract class AbstractCommand<P, T> implements Callable<P> {
 
     String name;
     String[] command;
-    Object lock;
-
-    Queue<Events> eventQueue;
+    Future<T> previous;
 
     AbstractCommand(String[] command) {
         this.name = command[0];
         this.command = command;
     }
 
+    AbstractCommand(String[] command, Future<T> previous) {
+        this(command);
+        this.previous = previous;
+    }
+
     public String getName() {
         return name;
-    }
-
-    public void setEventQueue(Queue<Events> eventQueue) {
-        this.eventQueue = eventQueue;
-    }
-
-    public void setLock(Object lock) {
-        this.lock = lock;
     }
 
 }

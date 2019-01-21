@@ -1,67 +1,18 @@
 package taskmanager.command;
 
-import taskmanager.events.Events;
-
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.function.Supplier;
 
-import static taskmanager.events.Events.*;
-
-public class DeleteCommand extends AbstractCommand {
+public class DeleteCommand extends AbstractCommand<Void, String> {
 
     DeleteCommand(String[] command) {
         super(command);
     }
 
     @Override
-    public Events call() {
-
-        Supplier<Events> res = () -> {
-            try {
-                Files.delete(Paths.get(command[1]));
-                return FILE_DELETED;
-            } catch (IOException e) {
-                return FILE_DELETION_FAILED;
-            }
-        };
-
-        return eventQueue == null
-                ? res.get()
-                : executeInGroup(res);
-    }
-
-    private Events executeInGroup(Supplier<Events> callable) {
-        while (true) {
-            synchronized (lock) {
-                try {
-                    if (eventQueue.peek() == WORDS_COUNTED) {
-                        //proceed
-                        eventQueue.poll();
-                        break;
-                    } else if (eventQueue.peek() == WORDS_COUNT_FAILED) {
-                        eventQueue.poll();
-                        eventQueue.add(FILE_DELETION_FAILED);
-                        lock.notifyAll();
-                        return FILE_DELETION_FAILED;
-                    } else {
-                        lock.wait();
-                    }
-                } catch (InterruptedException e) {
-                    //TODO -- ?
-                }
-            }
-        }
-
-        Events result = callable.get();
-
-        synchronized (lock) {
-            eventQueue.add(result);
-            lock.notifyAll();
-        }
-
-        return result;
+    public Void call() throws Exception {
+        Files.delete(Paths.get(previous != null ? previous.get() : command[1]));
+        return null;
     }
 
 }

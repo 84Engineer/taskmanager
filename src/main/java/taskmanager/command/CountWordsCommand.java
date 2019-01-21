@@ -1,75 +1,27 @@
 package taskmanager.command;
 
-import taskmanager.events.Events;
-
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static taskmanager.events.Events.*;
-
-public class CountWordsCommand extends AbstractCommand {
+public class CountWordsCommand extends AbstractCommand<String, String> {
 
     CountWordsCommand(String[] command) {
         super(command);
     }
 
     @Override
-    public Events call() {
+    public String call() throws Exception {
 
-        Supplier<Events> result = () -> {
-            try {
-                String inputFile = command[1];
-                String outputFile = command[2];
-                List<String> allWords = getAllWords(inputFile);
-                saveWords(allWords, outputFile);
-            } catch (IOException e) {
-                return WORDS_COUNT_FAILED;
-            }
-            return WORDS_COUNTED;
-        };
-
-        return eventQueue == null
-                ? result.get()
-                : executeInGroup(result);
-
-    }
-
-    private Events executeInGroup(Supplier<Events> callable) {
-        while (true) {
-            synchronized (lock) {
-                try {
-                    if (eventQueue.peek() == FILE_DOWNLOADED) {
-                        //proceed
-                        eventQueue.poll();
-                        break;
-                    } else if (eventQueue.peek() == DOWNLOAD_FAILED) {
-                        eventQueue.poll();
-                        eventQueue.add(WORDS_COUNT_FAILED);
-                        lock.notifyAll();
-                        return WORDS_COUNT_FAILED;
-                    } else {
-                        lock.wait();
-                    }
-                } catch (InterruptedException e) {
-                    //TODO -- ?
-                }
-            }
-        }
-
-        Events result = callable.get();
-
-        synchronized (lock) {
-            eventQueue.add(result);
-            lock.notifyAll();
-        }
-
-        return result;
+        String inputFile = previous != null ? previous.get() : command[1];
+        String outputFile = previous != null ? command[1] : command[2];
+        List<String> allWords = getAllWords(inputFile);
+        saveWords(allWords, outputFile);
+        return outputFile;
     }
 
 
