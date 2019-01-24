@@ -15,6 +15,13 @@ public abstract class AbstractCommand<IN, OUT> implements Callable<OUT> {
         this.command = command;
     }
 
+    String getArg(int index) {
+        if (index < command.length) {
+            return command[index];
+        }
+        return null;
+    }
+
     public String getName() {
         return name;
     }
