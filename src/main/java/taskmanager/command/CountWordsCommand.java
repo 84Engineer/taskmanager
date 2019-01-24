@@ -17,7 +17,7 @@ public class CountWordsCommand extends AbstractCommand<String, String> {
     @Override
     public String call() throws Exception {
 
-        String inputFile = previous != null ? previous.get() : command[1];
+        String inputFile = consume(command[1]);
         String outputFile = previous != null ? command[1] : command[2];
         List<String> allWords = getAllWords(inputFile);
         saveWords(allWords, outputFile);
