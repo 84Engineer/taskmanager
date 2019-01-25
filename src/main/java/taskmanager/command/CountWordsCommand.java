@@ -1,43 +1,50 @@
 package taskmanager.command;
 
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.List;
+import taskmanager.events.Events;
+
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class CountWordsCommand extends AbstractCommand<String, String> {
+import static java.lang.System.lineSeparator;
+import static java.util.stream.Collectors.counting;
+import static java.util.stream.Collectors.joining;
+
+public class CountWordsCommand extends AbstractCommand<Stream<String>, String> {
 
     CountWordsCommand(String[] command) {
         super(command);
     }
 
     @Override
-    public String call() throws Exception {
-
-        String inputFile = consume(command[1]);
-        String outputFile = previous != null ? command[1] : command[2];
-        List<String> allWords = getAllWords(inputFile);
-        saveWords(allWords, outputFile);
-        return outputFile;
+    public Events call() throws Exception {
+        Map<String, Long> allWords = getAllWords(consume());
+        publish(toOutputFormat(allWords));
+        return Events.WORDS_COUNTED;
     }
 
 
-    private List<String> getAllWords(String inputFile) throws IOException {
-        return Files.lines(Paths.get(inputFile), Charset.forName("UTF-8")).map(l -> l.split("\\W+"))
+    private Map<String, Long> getAllWords(Stream<String> input) {
+        return input.map(l -> l.split("\\W+"))
                 .flatMap(Stream::of).map(String::toLowerCase).distinct()
-                .collect(Collectors.toList());
+                .collect(Collectors.groupingByConcurrent(Function.identity(), counting()));
     }
 
-    private void saveWords(List<String> words, String outputFile) throws IOException {
-        Files.write(
-                Paths.get(outputFile),
-                String.format("Words count is %d%s%s",
-                        words.size(),
-                        System.getProperty("line.separator"),
-                        String.join(", ", words))
-                        .getBytes());
+    private String toOutputFormat(Map<String, Long> wordMap) {
+        return wordMap.entrySet().stream()
+                .map(e -> e.getKey() + ": " + e.getValue())
+                .collect(joining(lineSeparator()));
     }
+
+
+//    private void saveWords(List<String> words, String outputFile) throws IOException {
+//        Files.write(
+//                Paths.get(outputFile),
+//                String.format("Words count is %d%s%s",
+//                        words.size(),
+//                        System.getProperty("line.separator"),
+//                        String.join(", ", words))
+//                        .getBytes());
+//    }
 }

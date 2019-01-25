@@ -1,9 +1,11 @@
 package taskmanager.command;
 
+import taskmanager.events.Events;
+
 import java.util.concurrent.Callable;
 import java.util.concurrent.SynchronousQueue;
 
-public abstract class AbstractCommand<IN, OUT> implements Callable<OUT> {
+public abstract class AbstractCommand<IN, OUT> implements Callable<Events> {
 
     String name;
     String[] command;
@@ -15,11 +17,11 @@ public abstract class AbstractCommand<IN, OUT> implements Callable<OUT> {
         this.command = command;
     }
 
-    String getArg(int index) {
+    String getArg(int index, String argName) {
         if (index < command.length) {
             return command[index];
         }
-        return null;
+        throw new IllegalArgumentException(argName + " not passed.");
     }
 
     public String getName() {
@@ -41,7 +43,8 @@ public abstract class AbstractCommand<IN, OUT> implements Callable<OUT> {
         return res;
     }
 
-    IN consume(IN... def) throws InterruptedException {
+    @SafeVarargs
+    final IN consume(IN... def) throws InterruptedException {
         if (in != null) {
             return in.take();
         }

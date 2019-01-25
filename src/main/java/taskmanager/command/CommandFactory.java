@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.concurrent.SynchronousQueue;
 
 public class CommandFactory {
 
@@ -15,13 +16,16 @@ public class CommandFactory {
         List<AbstractCommand> result = new ArrayList<>();
         for (String commandLine : lines) {
             if (isGroup(commandLine)) {
-                Queue<Events> queue = new LinkedList<>();
-                Object lock = new Object();
+                List<AbstractCommand<?, ?>> commands = new ArrayList<>();
                 for (String cmd : commandLine.split(COMMAND_SEPARATOR)) {
                     AbstractCommand command = getCommand(cmd.trim());
-                    command.setEventQueue(queue);
-                    command.setLock(lock);
                     result.add(command);
+                    commands.add(command);
+                }
+
+                for (int i = 1; i < commands.size(); i++) {
+                    SynchronousQueue<?> queue = new SynchronousQueue<>();
+                    commands.get(i - 1).setOut(queue);
                 }
             } else {
                 result.add(getCommand(commandLine));
@@ -43,11 +47,13 @@ public class CommandFactory {
                 return new DownloadCommand(command);
             case "countwords":
             case "cw":
-            case "count":
                 return new CountWordsCommand(command);
             case "delete":
             case "del":
                 return new DeleteCommand(command);
+            case "save":
+            case "s":
+                return new SaveCommand(command);
             default:
                 throw new IllegalArgumentException("Unknown command: " + command[0]);
         }

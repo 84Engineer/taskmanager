@@ -7,6 +7,7 @@ public enum Events {
     WORDS_COUNT_FAILED("Word count jobs failed"),
     FILE_DELETED("File delete jobs finished"),
     FILE_DELETION_FAILED("File deletion jobs failed"),
+    FILE_SAVED("File save jobs finished"),
     //Todo properly work on tracking result
     UNKNOWN("Jobs failed with unknown reason");
 
