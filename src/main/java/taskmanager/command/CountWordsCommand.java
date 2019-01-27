@@ -24,7 +24,7 @@ public class CountWordsCommand extends AbstractCommand<String, String> {
 
     @Override
     public Events call() throws Exception {
-        String file = in != null ? consume() : getArg(1, "Path to file");
+        String file = in != null ?  : getArg(1, "Path to file");
         Map<String, Long> allWords = getAllWords(Files.lines(
                 Paths.get(file)));
         String result = toOutputFormat(allWords);

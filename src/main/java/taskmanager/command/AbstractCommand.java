@@ -3,18 +3,18 @@ package taskmanager.command;
 import taskmanager.events.Events;
 
 import java.io.IOException;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.concurrent.Callable;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.TimeUnit;
 
-public abstract class AbstractCommand<IN, OUT> implements Callable<Events> {
+public abstract class AbstractCommand implements Callable<Events> {
 
     String name;
     String[] command;
-    SynchronousQueue<IN> in;
-    SynchronousQueue<OUT> out;
+    PipedInputStream in;
+    PipedOutputStream out;
 
     AbstractCommand(String[] command) {
         this.name = command[0];
@@ -32,29 +32,16 @@ public abstract class AbstractCommand<IN, OUT> implements Callable<Events> {
         return name;
     }
 
-    public void setIn(SynchronousQueue<IN> in) {
+    public void setIn(PipedInputStream in) {
         this.in = in;
     }
 
-    public void setOut(SynchronousQueue<OUT> out) {
+    public void setOut(PipedOutputStream out) {
         this.out = out;
     }
 
-    void publish(OUT res) throws InterruptedException {
-        if (out != null) {
-            out.offer(res, 1, TimeUnit.MINUTES);
-        }
-    }
-
-    IN consume() throws InterruptedException {
-        if (in != null) {
-            return in.poll(1, TimeUnit.MINUTES);
-        }
-        return null;
-    }
 
     void writeToFile(String output, String filePath) throws IOException {
-        Files.write(Paths.get(filePath),
-                output.getBytes());
+        Files.write(Paths.get(filePath), output.getBytes());
     }
 }
