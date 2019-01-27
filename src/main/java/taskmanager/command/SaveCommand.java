@@ -12,7 +12,9 @@ public class SaveCommand extends AbstractCommand<String, Void> {
 
     @Override
     public Events call() throws Exception {
-        Files.write(Paths.get(getArg(1, "Out filename")), consume().getBytes());
+        writeToFile(consume(), getArg(1, "Out filename"));
+//        Files.write(Paths.get(getArg(1, "Out filename")),
+//                (consume()).getBytes());
         return Events.FILE_SAVED;
     }
 }

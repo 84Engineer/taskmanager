@@ -7,6 +7,7 @@ import taskmanager.events.Events;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Scanner;
@@ -20,18 +21,17 @@ public class TaskManager {
 
     public static void main(String[] args) throws Exception {
 
-        Scanner sc = new Scanner(System.in);
+        if (args.length == 0) {
+            throw new IllegalArgumentException("Commands file not specified.");
+        }
 
-        System.out.println("Enter command file location:");
-        String input = sc.nextLine();
-
-        List<AbstractCommand> commands = extractCommands(input);
+        List<AbstractCommand<?, ?>> commands = extractCommands(args[0]);
 
         ExecutorService executorService = Executors.newCachedThreadPool();
         List<Future<Events>> results = commands.stream().map(executorService::submit).collect(toList());
         executorService.shutdown();
 
-        startStatDeamon(sc, results);
+        startStatDeamon(results, 5000);
 
         executorService.awaitTermination(1, TimeUnit.MINUTES);
 
@@ -39,18 +39,18 @@ public class TaskManager {
 
     }
 
-    private static List<AbstractCommand> extractCommands(String file) throws IOException {
+    private static List<AbstractCommand<?, ?>> extractCommands(String file) throws IOException {
         return CommandFactory.getCommands(Files.readAllLines(Paths.get(file)));
-//        return Files.lines(Paths.get(file)).map(CommandFactory::getCommand)
-//                .collect(toList());
     }
 
-    private static void startStatDeamon(Scanner sc, List<Future<Events>> results) {
+    private static void startStatDeamon(List<Future<Events>> results, long periodicity) {
         Thread cmd = new Thread(() -> {
             while (true) {
-                String in = sc.nextLine();
-                if (in.toLowerCase().trim().equals("stat")) {
+                try {
+                    Thread.sleep(periodicity);
                     printReport(results);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
             }
         });
@@ -64,16 +64,14 @@ public class TaskManager {
         //TODO print res according to exceptions thrown by get() method
 
         List<Future<Events>> doneTasks = results.stream().filter(Future::isDone).collect(toList());
+        List<Exception> exceptions = new ArrayList<>();
 
         doneTasks.stream().map(f -> {
             try {
                 return f.get();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-                return Events.UNKNOWN;
-            } catch (ExecutionException e) {
-                e.printStackTrace();
-                return Events.UNKNOWN;
+            } catch (Exception e) {
+                exceptions.add(e);
+                return Events.EXCEPTION;
             }
         }).collect(toMap(
                 identity(),
@@ -83,6 +81,14 @@ public class TaskManager {
                 .forEach((r, c) -> System.out.println(r.getLabel() + ": " + c));
 
         System.out.println("Unfinished jobs: " + (results.size() - doneTasks.size()));
+
+        if (!exceptions.isEmpty()) {
+            System.out.println("Exceptions thrown by tasks: ");
+            exceptions.forEach(e -> {
+                e.printStackTrace();
+                System.out.println("*******************************************");
+            });
+        }
     }
 
 }

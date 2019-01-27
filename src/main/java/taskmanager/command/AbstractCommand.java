@@ -2,8 +2,12 @@ package taskmanager.command;
 
 import taskmanager.events.Events;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.concurrent.Callable;
 import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractCommand<IN, OUT> implements Callable<Events> {
 
@@ -36,18 +40,21 @@ public abstract class AbstractCommand<IN, OUT> implements Callable<Events> {
         this.out = out;
     }
 
-    OUT publish(OUT res) throws InterruptedException {
+    void publish(OUT res) throws InterruptedException {
         if (out != null) {
-            out.put(res);
+            out.offer(res, 1, TimeUnit.MINUTES);
         }
-        return res;
     }
 
-    @SafeVarargs
-    final IN consume(IN... def) throws InterruptedException {
+    IN consume() throws InterruptedException {
         if (in != null) {
-            return in.take();
+            return in.poll(1, TimeUnit.MINUTES);
         }
-        return def.length > 0 ? def[0] : null;
+        return null;
+    }
+
+    void writeToFile(String output, String filePath) throws IOException {
+        Files.write(Paths.get(filePath),
+                output.getBytes());
     }
 }

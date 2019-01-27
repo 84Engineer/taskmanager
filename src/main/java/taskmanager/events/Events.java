@@ -2,18 +2,13 @@ package taskmanager.events;
 
 public enum Events {
     FILE_DOWNLOADED("Files download jobs finished"),
-    DOWNLOAD_FAILED("Failed download jobs failed"),
     WORDS_COUNTED("Word count jobs finished"),
-    WORDS_COUNT_FAILED("Word count jobs failed"),
-    FILE_DELETED("File delete jobs finished"),
-    FILE_DELETION_FAILED("File deletion jobs failed"),
     FILE_SAVED("File save jobs finished"),
-    //Todo properly work on tracking result
-    UNKNOWN("Jobs failed with unknown reason");
+    EXCEPTION("Jobs failed with exception");
 
     private final String label;
 
-    private Events(String label) {
+    Events(String label) {
         this.label = label;
     }
 

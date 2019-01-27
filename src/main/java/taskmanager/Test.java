@@ -46,4 +46,10 @@ public class Test {
 
     }
 
+    private static <T> List<T> asList(T e) {
+        List<T> l = new ArrayList<>();
+        l.add(e);
+        return l;
+    }
+
 }
