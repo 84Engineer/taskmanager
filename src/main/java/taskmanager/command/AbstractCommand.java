@@ -21,6 +21,30 @@ public abstract class AbstractCommand implements Callable<Events> {
         this.command = command;
     }
 
+    @Override
+    public Events call() throws Exception {
+        try {
+            return execute();
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (out != null) {
+                try {
+                    out.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    abstract Events execute() throws Exception;
+
     String getArg(int index, String argName) {
         if (index < command.length) {
             return command[index];

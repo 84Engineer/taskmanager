@@ -1,18 +1,20 @@
 package taskmanager.command;
 
+import java.io.IOException;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.SynchronousQueue;
 
 public class CommandFactory {
 
     public static final String COMMAND_SEPARATOR = ">";
 
-    public static List<AbstractCommand<?, ?>> getCommands(List<String> lines) {
-        List<AbstractCommand<?, ?>> result = new ArrayList<>();
+    public static List<AbstractCommand> getCommands(List<String> lines) throws IOException {
+        List<AbstractCommand> result = new ArrayList<>();
         for (String commandLine : lines) {
             if (isGroup(commandLine)) {
-                List<AbstractCommand<?, ?>> groupCmds = new ArrayList<>();
+                List<AbstractCommand> groupCmds = new ArrayList<>();
                 for (String cmd : commandLine.split(COMMAND_SEPARATOR)) {
                     groupCmds.add(getCommand(cmd.trim()));
                 }
@@ -29,7 +31,7 @@ public class CommandFactory {
         return commandLine.contains(COMMAND_SEPARATOR);
     }
 
-    public static AbstractCommand<?, ?> getCommand(String input) {
+    public static AbstractCommand getCommand(String input) {
         String[] command = input.split(" ");
 
         AbstractCommand cmd;
@@ -58,12 +60,13 @@ public class CommandFactory {
         return cmd;
     }
 
-    @SuppressWarnings("unchecked")
-    private static <I, IO, O> void connectCommands(List<AbstractCommand<?, ?>> commands) {
+    private static void connectCommands(List<AbstractCommand> commands) throws IOException {
         for (int i = 1; i < commands.size(); i++) {
-            SynchronousQueue<IO> queue = new SynchronousQueue<>();
-            ((AbstractCommand<I, IO>) commands.get(i - 1)).setOut(queue);
-            ((AbstractCommand<IO, O>) commands.get(i)).setIn(queue);
+            PipedInputStream in = new PipedInputStream();
+            PipedOutputStream out = new PipedOutputStream();
+            in.connect(out);
+            commands.get(i - 1).setOut(out);
+            commands.get(i).setIn(in);
         }
     }
 

@@ -10,8 +10,10 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
-import java.util.Scanner;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
@@ -25,9 +27,9 @@ public class TaskManager {
             throw new IllegalArgumentException("Commands file not specified.");
         }
 
-        List<AbstractCommand<?, ?>> commands = extractCommands(args[0]);
+        List<AbstractCommand> commands = extractCommands(args[0]);
 
-        ExecutorService executorService = Executors.newCachedThreadPool();
+        ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 10);
         List<Future<Events>> results = commands.stream().map(executorService::submit).collect(toList());
         executorService.shutdown();
 
@@ -39,7 +41,7 @@ public class TaskManager {
 
     }
 
-    private static List<AbstractCommand<?, ?>> extractCommands(String file) throws IOException {
+    private static List<AbstractCommand> extractCommands(String file) throws IOException {
         return CommandFactory.getCommands(Files.readAllLines(Paths.get(file)));
     }
 
@@ -61,7 +63,6 @@ public class TaskManager {
 
     public static void printReport(List<Future<Events>> results) {
         System.out.println("***Application report***");
-        //TODO print res according to exceptions thrown by get() method
 
         List<Future<Events>> doneTasks = results.stream().filter(Future::isDone).collect(toList());
         List<Exception> exceptions = new ArrayList<>();

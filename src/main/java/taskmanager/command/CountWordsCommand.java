@@ -2,6 +2,10 @@ package taskmanager.command;
 
 import taskmanager.events.Events;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -16,20 +20,23 @@ import static java.lang.System.lineSeparator;
 import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.joining;
 
-public class CountWordsCommand extends AbstractCommand<String, String> {
+public class CountWordsCommand extends AbstractCommand {
 
     CountWordsCommand(String[] command) {
         super(command);
     }
 
     @Override
-    public Events call() throws Exception {
-        String file = in != null ?  : getArg(1, "Path to file");
-        Map<String, Long> allWords = getAllWords(Files.lines(
-                Paths.get(file)));
+    public Events execute() throws Exception {
+        Stream<String> lines = in != null
+                ? new BufferedReader(new InputStreamReader(in)).lines()
+                : Files.lines(Paths.get(getArg(1, "Path to file")));
+        Map<String, Long> allWords = getAllWords(lines);
         String result = toOutputFormat(allWords);
         if (out != null) {
-            publish(result);
+            BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(out));
+            bufferedWriter.write(result);
+            bufferedWriter.flush();
         } else {
             writeToFile(result, getArg(2, "Out filename"));
         }
