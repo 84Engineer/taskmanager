@@ -1,13 +1,10 @@
 package taskmanager.command;
 
-import taskmanager.events.Events;
-
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -16,14 +13,14 @@ import static java.lang.System.lineSeparator;
 import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.joining;
 
-public class CountWordsCommand extends AbstractCommand<String, String> {
+public class CountWordsCommand extends AbstractCommand {
 
     CountWordsCommand(String[] command) {
         super(command);
     }
 
     @Override
-    public Events call() throws Exception {
+    public void execute() throws Exception {
         String file = in != null ? consume() : getArg(1, "Path to file");
         Map<String, Long> allWords = getAllWords(Files.lines(
                 Paths.get(file)));
@@ -33,7 +30,6 @@ public class CountWordsCommand extends AbstractCommand<String, String> {
         } else {
             writeToFile(result, getArg(2, "Out filename"));
         }
-        return Events.WORDS_COUNTED;
     }
 
 

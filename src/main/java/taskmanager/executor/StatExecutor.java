@@ -1,0 +1,28 @@
+package taskmanager.executor;
+
+import java.util.Collections;
+import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+public class StatExecutor extends ThreadPoolExecutor {
+
+    private Map<String, Long> statMap = new ConcurrentHashMap<>();
+
+    public StatExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue) {
+        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue);
+    }
+
+    @Override
+    protected void afterExecute(Runnable r, Throwable t) {
+        statMap.merge(
+                (t == null ? "COMPLETED " : "FAILED ") + r.toString(),
+                1L, Long::sum);
+    }
+
+    public Map<String, Long> getStatMap() {
+        return Collections.unmodifiableMap(statMap);
+    }
+}

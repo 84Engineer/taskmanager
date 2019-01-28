@@ -12,9 +12,9 @@ public class DeleteCommand extends AbstractCommand/*<String, Void> */{
     }
 
     @Override
-    public Events call() throws Exception {
+    public void execute() {
 //        Files.delete(Paths.get(previous != null ? previous.get() : command[1]));
-        return null;
+//        return null;
     }
 
 }
