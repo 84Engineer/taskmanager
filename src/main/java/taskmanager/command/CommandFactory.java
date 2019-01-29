@@ -80,8 +80,7 @@ public class CommandFactory {
         List<AbstractCommand> commands = StateManager.restoreCommandState();
         for (AbstractCommand cmd : commands) {
             AbstractCommand c = cmd;
-            boolean unrestorable = false;
-            while(c.getPrevId() != null || unrestorable) {
+            while(c.getPrevId() != null || c.input == null) {
 
             }
         }

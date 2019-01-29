@@ -15,6 +15,7 @@ public abstract class AbstractCommand implements Runnable, Serializable {
     Long nextId;
     Long id;
     boolean completed;
+    String input;
     transient SynchronousQueue<String> in;
     transient SynchronousQueue<String> out;
 
@@ -68,7 +69,7 @@ public abstract class AbstractCommand implements Runnable, Serializable {
 
     String consume() throws InterruptedException {
         if (in != null) {
-            return in.poll(1, TimeUnit.MINUTES);
+            return input = in.poll(1, TimeUnit.MINUTES);
         }
         return null;
     }
@@ -88,6 +89,10 @@ public abstract class AbstractCommand implements Runnable, Serializable {
 
     public void setPrevId(Long prevId) {
         this.prevId = prevId;
+    }
+
+    public String getInput() {
+        return input;
     }
 
     public Long getNextId() {
