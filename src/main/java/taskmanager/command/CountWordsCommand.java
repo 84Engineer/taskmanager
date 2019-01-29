@@ -14,9 +14,10 @@ import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.joining;
 
 public class CountWordsCommand extends AbstractCommand {
+    CountWordsCommand(){}
 
-    CountWordsCommand(String[] command) {
-        super(command);
+    CountWordsCommand(String[] command, long id) {
+        super(command, id);
     }
 
     @Override

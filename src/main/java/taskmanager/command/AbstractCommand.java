@@ -1,21 +1,31 @@
 package taskmanager.command;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.TimeUnit;
 
-public abstract class AbstractCommand implements Runnable {
+public abstract class AbstractCommand implements Runnable, Serializable {
 
     String name;
     String[] command;
-    SynchronousQueue<String> in;
-    SynchronousQueue<String> out;
+    Long prevId;
+    Long nextId;
+    Long id;
+    boolean completed;
+    transient SynchronousQueue<String> in;
+    transient SynchronousQueue<String> out;
 
-    AbstractCommand(String[] command) {
+    AbstractCommand() {
+
+    }
+
+    AbstractCommand(String[] command, long id) {
         this.name = command[0];
         this.command = command;
+        this.id = id;
     }
 
     @Override
@@ -24,6 +34,8 @@ public abstract class AbstractCommand implements Runnable {
             execute();
         } catch (Exception e) {
             throw new RuntimeException(e);
+        } finally {
+            completed = true;
         }
     }
 
@@ -64,6 +76,26 @@ public abstract class AbstractCommand implements Runnable {
     void writeToFile(String output, String filePath) throws IOException {
         Files.write(Paths.get(filePath),
                 output.getBytes());
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public Long getPrevId() {
+        return prevId;
+    }
+
+    public void setPrevId(Long prevId) {
+        this.prevId = prevId;
+    }
+
+    public Long getNextId() {
+        return nextId;
+    }
+
+    public void setNextId(Long nextId) {
+        this.nextId = nextId;
     }
 
     @Override

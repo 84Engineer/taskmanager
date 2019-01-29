@@ -1,5 +1,8 @@
 package taskmanager.executor;
 
+import taskmanager.command.AbstractCommand;
+import taskmanager.state.utils.StateManager;
+
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -20,6 +23,7 @@ public class StatExecutor extends ThreadPoolExecutor {
         statMap.merge(
                 (t == null ? "COMPLETED " : "FAILED ") + r.toString(),
                 1L, Long::sum);
+        StateManager.clearState((AbstractCommand) r);
     }
 
     public Map<String, Long> getStatMap() {

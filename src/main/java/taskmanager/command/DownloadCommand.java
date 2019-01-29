@@ -9,8 +9,10 @@ import java.nio.file.StandardCopyOption;
 
 public class DownloadCommand extends AbstractCommand {
 
-    DownloadCommand(String[] command) {
-        super(command);
+    DownloadCommand(){}
+
+    DownloadCommand(String[] command, long id) {
+        super(command, id);
     }
 
     @Override

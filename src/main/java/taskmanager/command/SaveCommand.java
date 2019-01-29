@@ -1,8 +1,9 @@
 package taskmanager.command;
 
 public class SaveCommand extends AbstractCommand {
-    SaveCommand(String[] command) {
-        super(command);
+    SaveCommand(){}
+    SaveCommand(String[] command, long id) {
+        super(command, id);
     }
 
     @Override
