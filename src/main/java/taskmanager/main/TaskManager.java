@@ -36,7 +36,7 @@ public class TaskManager {
 
         Map<String, Long> statMap = executorService.getStatMap();
 
-        startStatDaemon(statMap, 2000);
+        startStatDaemon(statMap, 1000);
 
         executorService.awaitTermination(1, TimeUnit.MINUTES);
 
@@ -55,7 +55,8 @@ public class TaskManager {
                 try {
                     Thread.sleep(periodicity);
                     printReport(statMap);
-//                    System.exit(0);
+                    //Uncomment to emulate app crash
+//                    System.exit(1);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

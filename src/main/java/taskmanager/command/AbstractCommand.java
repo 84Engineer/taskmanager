@@ -11,17 +11,11 @@ public abstract class AbstractCommand implements Runnable, Serializable {
 
     String name;
     String[] command;
-    Long prevId;
-    Long nextId;
     Long id;
-    boolean completed;
     String input;
-    transient SynchronousQueue<String> in;
-    transient SynchronousQueue<String> out;
-
-    AbstractCommand() {
-
-    }
+    CommandPipe commandPipe;
+    SynchronousQueue<String> in;
+    SynchronousQueue<String> out;
 
     AbstractCommand(String[] command, long id) {
         this.name = command[0];
@@ -35,8 +29,6 @@ public abstract class AbstractCommand implements Runnable, Serializable {
             execute();
         } catch (Exception e) {
             throw new RuntimeException(e);
-        } finally {
-            completed = true;
         }
     }
 
@@ -83,24 +75,12 @@ public abstract class AbstractCommand implements Runnable, Serializable {
         return id;
     }
 
-    public Long getPrevId() {
-        return prevId;
+    public CommandPipe getCommandPipe() {
+        return commandPipe;
     }
 
-    public void setPrevId(Long prevId) {
-        this.prevId = prevId;
-    }
-
-    public String getInput() {
-        return input;
-    }
-
-    public Long getNextId() {
-        return nextId;
-    }
-
-    public void setNextId(Long nextId) {
-        this.nextId = nextId;
+    public void setCommandPipe(CommandPipe commandPipe) {
+        this.commandPipe = commandPipe;
     }
 
     @Override

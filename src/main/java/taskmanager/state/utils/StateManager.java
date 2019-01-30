@@ -1,8 +1,10 @@
 package taskmanager.state.utils;
 
 import taskmanager.command.AbstractCommand;
+import taskmanager.command.CommandPipe;
 
 import java.io.*;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,7 +12,7 @@ import static java.util.stream.Stream.of;
 
 public class StateManager {
 
-    public static final String SAVED_FOLDER_PATH = "src/resources/saved/";
+    public static final String SAVED_FOLDER_PATH = "src/main/resources/saved/";
 
     public static void saveCommands(List<AbstractCommand> cmds) throws IOException {
         for (AbstractCommand cmd : cmds) {
@@ -24,12 +26,25 @@ public class StateManager {
         }
     }
 
+    public static void saveCommandPipe(CommandPipe pipe) throws IOException {
+        try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(SAVED_FOLDER_PATH + pipe.toString()))) {
+            out.writeObject(pipe);
+        }
+    }
+
     public static List<AbstractCommand> restoreCommandState() throws IOException, ClassNotFoundException {
 
         List<AbstractCommand> commands = new ArrayList<>();
         for (File file : new File(SAVED_FOLDER_PATH).listFiles()) {
             try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(file))) {
-                commands.add((AbstractCommand) in.readObject());
+                Object obj = in.readObject();
+                if (obj instanceof AbstractCommand) {
+                    commands.add((AbstractCommand) obj);
+                } else if (obj instanceof CommandPipe) {
+                    commands.addAll(((CommandPipe) obj).getCommands());
+                } else {
+                    System.out.println("Skipping restoring object of type: " + obj.getClass().getSimpleName());
+                }
             }
         }
         return commands;
@@ -44,13 +59,28 @@ public class StateManager {
     }
 
     public static void clearState() {
-        of(new File(SAVED_FOLDER_PATH).listFiles()).forEach(File::delete);
+        File[] files = new File(SAVED_FOLDER_PATH).listFiles();
+        if (files != null) {
+            of(files).forEach(File::delete);
+        }
     }
 
     public static void clearState(AbstractCommand cmd) {
-        of(new File(SAVED_FOLDER_PATH).listFiles())
-                .filter(f -> f.getName().equals(getFileName(cmd)))
-                .findFirst().ifPresent(File::delete);
+        File[] files = new File(SAVED_FOLDER_PATH).listFiles();
+        if (files != null) {
+            of(files)
+                    .filter(f -> f.getName().equals(getFileName(cmd)))
+                    .findFirst().ifPresent(File::delete);
+        }
+    }
+
+    public static void clearState(CommandPipe pipe) {
+        File[] files = new File(SAVED_FOLDER_PATH).listFiles();
+        if (files != null) {
+            of(files)
+                    .filter(f -> f.getName().equals(pipe.toString()))
+                    .findFirst().ifPresent(File::delete);
+        }
     }
 
 }

@@ -1,5 +1,5 @@
-d http://www.gutenberg.org/files/58737/58737-0.txt > cw > save words-counted.txt
 download http://www.gutenberg.org/cache/epub/58765/pg58765.txt
 cw countwords-file1.txt countwords-file1-res.txt
+d http://www.gutenberg.org/files/58737/58737-0.txt > cw > save words-counted.txt
 d http://www.gutenberg.org/files/58768/58768-0.txt
 countwords countwords-file2.txt countwords-file2-res.txt

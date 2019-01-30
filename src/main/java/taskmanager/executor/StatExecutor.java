@@ -1,6 +1,7 @@
 package taskmanager.executor;
 
 import taskmanager.command.AbstractCommand;
+import taskmanager.command.CommandPipe;
 import taskmanager.state.utils.StateManager;
 
 import java.util.Collections;
@@ -23,7 +24,18 @@ public class StatExecutor extends ThreadPoolExecutor {
         statMap.merge(
                 (t == null ? "COMPLETED " : "FAILED ") + r.toString(),
                 1L, Long::sum);
-        StateManager.clearState((AbstractCommand) r);
+//        StateManager.clearState((AbstractCommand) r);
+        AbstractCommand cmd = (AbstractCommand) r;
+        CommandPipe pipe = cmd.getCommandPipe();
+        if (pipe == null) {
+            StateManager.clearState(cmd);
+        } else {
+            pipe.removeCommand(cmd);
+            if (pipe.size() == 0) {
+                StateManager.clearState(pipe);
+            }
+        }
+
     }
 
     public Map<String, Long> getStatMap() {

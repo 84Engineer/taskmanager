@@ -11,22 +11,27 @@ public class CommandFactory {
 
     public static final String COMMAND_SEPARATOR = ">";
     private static long commandSequence = 0L;
+    private static long commandPipeSequence = 0L;
 
     public static List<AbstractCommand> getCommands(List<String> lines) throws IOException {
         List<AbstractCommand> result = new ArrayList<>();
         for (String commandLine : lines) {
             if (isGroup(commandLine)) {
-                List<AbstractCommand> groupCmds = new ArrayList<>();
+                CommandPipe pipe = new CommandPipe(commandPipeSequence++);
                 for (String cmd : commandLine.split(COMMAND_SEPARATOR)) {
-                    groupCmds.add(getCommand(cmd.trim()));
+                    AbstractCommand command = getCommand(cmd.trim());
+                    pipe.addCommand(command);
+                    command.setCommandPipe(pipe);
                 }
-                connectCommands(groupCmds);
-                result.addAll(groupCmds);
+                connectCommands(pipe.getCommands());
+                StateManager.saveCommandPipe(pipe);
+                result.addAll(pipe.getCommands());
             } else {
-                result.add(getCommand(commandLine));
+                AbstractCommand command = getCommand(commandLine);
+                result.add(command);
+                StateManager.saveCommandState(command);
             }
         }
-        StateManager.saveCommands(result);
         return result;
     }
 
@@ -38,7 +43,7 @@ public class CommandFactory {
         String[] command = input.split(" ");
 
         AbstractCommand cmd;
-        long id = ++commandSequence;
+        long id = commandSequence++;
 
         switch (command[0].toLowerCase()) {
             case "d":
@@ -67,22 +72,12 @@ public class CommandFactory {
     private static void connectCommands(List<AbstractCommand> commands) {
         for (int i = 1; i < commands.size(); i++) {
             SynchronousQueue<String> queue = new SynchronousQueue<>();
-            AbstractCommand firstCmd = commands.get(i - 1);
-            AbstractCommand secondCmd = commands.get(i);
-            firstCmd.setNextId(secondCmd.getId());
-            secondCmd.setPrevId(firstCmd.getId());
-            firstCmd.setOut(queue);
-            secondCmd.setIn(queue);
+            commands.get(i - 1).setOut(queue);
+            commands.get(i).setIn(queue);
         }
     }
 
     public static List<AbstractCommand> restoreCommands() throws IOException, ClassNotFoundException {
-        List<AbstractCommand> commands = StateManager.restoreCommandState();
-        for (AbstractCommand cmd : commands) {
-            AbstractCommand c = cmd;
-            while(c.getPrevId() != null || c.input == null) {
-
-            }
-        }
+        return StateManager.restoreCommandState();
     }
 }
