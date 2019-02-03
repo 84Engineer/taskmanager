@@ -12,7 +12,6 @@ public abstract class AbstractCommand implements Runnable, Serializable {
     String name;
     String[] command;
     Long id;
-    String input;
     CommandPipe commandPipe;
     SynchronousQueue<String> in;
     SynchronousQueue<String> out;
@@ -27,6 +26,8 @@ public abstract class AbstractCommand implements Runnable, Serializable {
     public void run() {
         try {
             execute();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -61,7 +62,7 @@ public abstract class AbstractCommand implements Runnable, Serializable {
 
     String consume() throws InterruptedException {
         if (in != null) {
-            return input = in.poll(1, TimeUnit.MINUTES);
+            return in.poll(1, TimeUnit.MINUTES);
         }
         return null;
     }
